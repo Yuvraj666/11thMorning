@@ -163,8 +163,7 @@ public class User implements ExceptionMessages {
 	public CustomerBean init(CustomerBean customer) throws IBSException {
 		LOGGER.info("Logged in as an existing customer");
 		CustomerOptions customerChoice = null;
-		 
-			
+
 		while (customerChoice != CustomerOptions.LOG_OUT) {
 			System.out.println("-----------------------------------------------------------------------------------");
 			List<LoanMaster> approvedLoansEmi = new ArrayList<>();
@@ -172,11 +171,11 @@ public class User implements ExceptionMessages {
 			approvedLoansEmi = customerService.getApprovedLoanListByUci(customer);
 			if (!approvedLoansEmi.isEmpty()) {
 				for (LoanMaster loanMaster : approvedLoansEmi) {
-					if(loanMaster.getNextEmiDate().minusDays(3).isBefore(LocalDate.now())){
+					if (loanMaster.getNextEmiDate().minusDays(3).isBefore(LocalDate.now())) {
 						pendingEmi.add(loanMaster);
 					}
 				}
-				if(!pendingEmi.isEmpty()) {
+				if (!pendingEmi.isEmpty()) {
 					System.out.println("\t\t\t\t****** NOTIFICATION ******");
 					System.out.println(
 							"\n-------------------------------------------------------------------------------------------------------------------------------------------");
@@ -190,7 +189,7 @@ public class User implements ExceptionMessages {
 								(loanMaster.getTotalNumOfEmis() - loanMaster.getNumOfEmisPaid()),
 								loanMaster.getEmiAmount().setScale(2), loanMaster.getNextEmiDate());
 						System.out.println();
-					} 
+					}
 					System.out.println(
 							"------------------------------------------------------------------------------------------------------------------------------------------");
 					System.out.println("\n\t\t\t\t\t**********\n");
@@ -253,7 +252,6 @@ public class User implements ExceptionMessages {
 		}
 		return customer;
 	}
-	
 
 	private void applyPreClosure(CustomerBean customer) {
 		List<LoanMaster> listTemp = new ArrayList<>();
@@ -305,6 +303,7 @@ public class User implements ExceptionMessages {
 					switch (preClosurePaymentChoice) {
 					case 1:
 						customerService.updatePreClosure(loanMaster);
+						createDebitTransactionForPreClosure(loanMaster);
 						System.out.println("Loan against Loan Number " + loanMaster.getLoanAccountNumber()
 								+ " sent for PreClosure verification.");
 						break;
@@ -323,6 +322,34 @@ public class User implements ExceptionMessages {
 
 			}
 		}
+	}
+
+	private void createDebitTransactionForPreClosure(LoanMaster loanMaster) {
+		TransactionBean transaction = new TransactionBean();
+		transaction = customerService.createDebitTransactionForPreClosure(loanMaster);
+		System.out.println("\n\t\t\t********\n");
+		System.out.println("Transaction Id:\t" + transaction.getTransactionId());
+		System.out.println("Transaction Account Number:\t" + transaction.getAccountNumber());
+		System.out.println("Transaction Amount:\t" + transaction.getTransactionAmount());
+		System.out.println("Transaction Date :\t" + transaction.getTransactionDate());
+		System.out.println("Transaction Mode :\t" + transaction.getTransactionMode());
+		System.out.println("Transaction Type :\t" + transaction.getTransactionType());
+		System.out.println("\n\t\t\t********\n");
+		try {
+			if (customerService.debitReceiptGenerator(loanMaster, transaction)) {
+				System.out.println("Receipt has been generated.\nSave the receipt for future references!");
+				System.out.println("\n\t\t\t********\n");
+			}
+		} catch (FileNotFoundException | DocumentException exp) {
+			LOGGER.error(exp.getMessage(), exp);
+			try {
+				throw new IBSException(ExceptionMessages.MESSAGEFORFILENOTFOUND);
+			} catch (IBSException exp1) {
+				LOGGER.error(exp1.getMessage(), exp1);
+				System.out.println(exp1.getMessage());
+			}
+		}
+
 	}
 
 	private void viewHistory(CustomerBean customer) {
@@ -534,10 +561,11 @@ public class User implements ExceptionMessages {
 					"Loan Type:\t" + customerService.getLoanTypeByTypeId(loanMasterTemp.getTypeId()).getLoanType());
 			System.out.println("Total Number of EMI's to be paid:\t" + loanMasterTemp.getTotalNumOfEmis());
 			System.out.println("Number of EMI's already paid:\t" + loanMasterTemp.getNumOfEmisPaid());
-			System.out.println("Balance amount in your savings account " + loanMasterTemp.getSavingsAccount().getAccNo()
-					+ ":\tINR " + loanMasterTemp.getSavingsAccount().getBalance() + " /-");
 			System.out.println("Outstanding loan balance:\tINR " + loanMasterTemp.getBalance() + " /-");
 			System.out.println("EMI amount to be paid:\tINR " + loanMasterTemp.getEmiAmount() + " /-");
+			System.out
+					.println("\nBalance amount in your savings account " + loanMasterTemp.getSavingsAccount().getAccNo()
+							+ ":\tINR " + loanMasterTemp.getSavingsAccount().getBalance() + " /-");
 			System.out.println("\n\t\t\t********\n");
 			System.out.println("Do you want to pay EMI:\n1. Yes\n2. No");
 			switch (read.nextInt()) {
@@ -642,16 +670,16 @@ public class User implements ExceptionMessages {
 				System.out.println("Enter the tenure: ");
 				System.out.println("**Top Up Tenure should be less than :\tINR " + loanMasterTemp.getLoanTenure());
 				topUp.setTopUpTenure(read.nextInt());
-				tenureVerify = customerService.verifyTopUpTenure(loanMasterTemp,topUp.getTopUpTenure());
+				tenureVerify = customerService.verifyTopUpTenure(loanMasterTemp, topUp.getTopUpTenure());
 				if (!tenureVerify) {
 					System.out.println("Not a Valid Top Up Tenure!");
 				}
 			}
 			BigDecimal updatedTopUpBalance = loanMasterTemp.getBalance().add(topUpAmount);
-			LoanMaster calculateEmiAfterTopUp=new LoanMaster();
+			LoanMaster calculateEmiAfterTopUp = new LoanMaster();
 			calculateEmiAfterTopUp.setBalance(updatedTopUpBalance);
-			System.out.println(
-					"Total Number of EMI's to be paid after Top Up:\t" + (loanMasterTemp.getTotalNumOfEmis() + topUp.getTopUpTenure()));
+			System.out.println("Total Number of EMI's to be paid after Top Up:\t"
+					+ (loanMasterTemp.getTotalNumOfEmis() + topUp.getTopUpTenure()));
 			System.out.println("Number of EMI's already paid:\t" + loanMasterTemp.getNumOfEmisPaid());
 			System.out.println("Balance Amount to be paid after Top Up:\t" + updatedTopUpBalance);
 			System.out.println("EMI to be paid:\t" + customerService.calculateEmi(calculateEmiAfterTopUp));
@@ -659,7 +687,7 @@ public class User implements ExceptionMessages {
 			System.out.println("Do you want to apply top-up:\n1. Yes\n2. No");
 			switch (read.nextInt()) {
 			case 1:
-				
+
 				topUp.setTopUpAmount(topUpAmount);
 				topUp.setTopUpTenure(topUpTenure);
 				LOGGER.info("Your loan application has been sent for verification");
@@ -716,6 +744,8 @@ public class User implements ExceptionMessages {
 		System.out.println("Transaction Account Number:\t" + transaction.getAccountNumber());
 		System.out.println("Transaction Amount:\t" + transaction.getTransactionAmount());
 		System.out.println("Transaction Date :\t" + transaction.getTransactionDate());
+		System.out.println("Transaction Mode :\t" + transaction.getTransactionMode());
+		System.out.println("Transaction Type :\t" + transaction.getTransactionType());
 		System.out.println("\n\t\t\t********\n");
 		try {
 			if (customerService.debitReceiptGenerator(loanMaster, transaction)) {
@@ -891,15 +921,73 @@ public class User implements ExceptionMessages {
 			case 1:
 				System.out.println(
 						"Loan with loan number " + loanMasterTemp.getLoanAccountNumber() + " has been closed.");
+				createCreditTransactionForPreClosure(loanMasterTemp);
 				LoanMaster loanMasterTempo = bankService.updatePreClosureApproval(loanMasterTemp);
 				System.out.println("Updated loan details:\nBalance: " + loanMasterTempo.getBalance()
 						+ "\nNumber of EMIs paid: " + loanMasterTempo.getNumOfEmisPaid());
 				break;
 			case 2:
+				createCreditTransactionForDeclinedPreClosure(loanMasterTemp);
+				LoanMaster loanMasterTempo1 = bankService.updatePreClosureDenial(loanMasterTemp);
 				System.out.println("Pre-Closure for loan with loan number " + loanMasterTemp.getLoanAccountNumber()
 						+ " has been declined.");
+				System.out.println(
+						"The amount deducted has been credited to your bank account. Updated savings account balance:\tINR "
+								+ loanMasterTemp.getSavingsAccount().getBalance() + "/-");
 			}
 		}
+	}
+
+	private void createCreditTransactionForDeclinedPreClosure(LoanMaster loanMasterTemp) {
+		TransactionBean transaction = new TransactionBean();
+		transaction = bankService.createCreditTransactionForDeclinedPreClosure(loanMasterTemp);
+		System.out.println("\n\t\t\t********\n");
+		System.out.println("Transaction Id:\t" + transaction.getTransactionId());
+		System.out.println("Transaction Account Number:\t" + transaction.getAccountNumber());
+		System.out.println("Transaction Amount:\t" + transaction.getTransactionAmount());
+		System.out.println("Transaction Date :\t" + transaction.getTransactionDate());
+		System.out.println("\n\t\t\t********\n");
+		try {
+			if (customerService.creditReceiptGenerator(loanMasterTemp, transaction)) {
+				System.out.println("Receipt has been generated.\nSave the receipt for future references!");
+				System.out.println("\n\t\t\t********\n");
+			}
+		} catch (FileNotFoundException | DocumentException exp) {
+			LOGGER.error(exp.getMessage(), exp);
+			try {
+				throw new IBSException(ExceptionMessages.MESSAGEFORFILENOTFOUND);
+			} catch (IBSException exp1) {
+				LOGGER.error(exp1.getMessage(), exp1);
+				System.out.println(exp1.getMessage());
+			}
+		}
+
+	}
+
+	private void createCreditTransactionForPreClosure(LoanMaster loanMasterTemp) {
+		TransactionBean transaction = new TransactionBean();
+		transaction = bankService.createCreditTransactionForPreClosure(loanMasterTemp);
+		System.out.println("\n\t\t\t********\n");
+		System.out.println("Transaction Id:\t" + transaction.getTransactionId());
+		System.out.println("Transaction Account Number:\t" + transaction.getAccountNumber());
+		System.out.println("Transaction Amount:\t" + transaction.getTransactionAmount());
+		System.out.println("Transaction Date :\t" + transaction.getTransactionDate());
+		System.out.println("\n\t\t\t********\n");
+		try {
+			if (customerService.creditReceiptGenerator(loanMasterTemp, transaction)) {
+				System.out.println("Receipt has been generated.\nSave the receipt for future references!");
+				System.out.println("\n\t\t\t********\n");
+			}
+		} catch (FileNotFoundException | DocumentException exp) {
+			LOGGER.error(exp.getMessage(), exp);
+			try {
+				throw new IBSException(ExceptionMessages.MESSAGEFORFILENOTFOUND);
+			} catch (IBSException exp1) {
+				LOGGER.error(exp1.getMessage(), exp1);
+				System.out.println(exp1.getMessage());
+			}
+		}
+
 	}
 
 	// customer Login
@@ -935,9 +1023,9 @@ public class User implements ExceptionMessages {
 				System.out.println("Good Morning!");
 			}
 			System.out.println("Welcome " + customerLoggedIn.getFirstName() + " " + customerLoggedIn.getLastName());
-			System.out.println("\t\t\t\tRegistered UCI :\t"+customerLoggedIn.getUci());
-			System.out.println("\t\t\t\tDate Of Birth :\t\t"+ customerLoggedIn.getDateOfBirth());
-			System.out.println("\t\t\t\tRegistered UserID:\t"+customerLoggedIn.getUserId());
+			System.out.println("\t\t\t\tRegistered UCI :\t" + customerLoggedIn.getUci());
+			System.out.println("\t\t\t\tDate Of Birth :\t\t" + customerLoggedIn.getDateOfBirth());
+			System.out.println("\t\t\t\tRegistered UserID:\t" + customerLoggedIn.getUserId());
 		}
 		return customerLoggedIn;
 	}

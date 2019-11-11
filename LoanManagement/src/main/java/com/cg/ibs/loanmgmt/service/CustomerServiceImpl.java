@@ -1,5 +1,6 @@
 package com.cg.ibs.loanmgmt.service;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -290,8 +291,12 @@ public class CustomerServiceImpl implements CustomerService {
 		LOGGER.info("Receipt is being generated");
 		boolean check = false;
 		Document document = new Document();
+		File dir = new File("./CustomerDebitReceipts");
+		if (!dir.exists()) {
+			dir.mkdir();
+		}
 		PdfWriter writer = PdfWriter.getInstance(document,
-				new FileOutputStream("Receipt_" + loanMaster.getLoanAccountNumber() + "savings_"
+				new FileOutputStream(dir.getPath() + "/Receipt_" + loanMaster.getLoanAccountNumber() + "savings_"
 						+ loanMaster.getSavingsAccount().getAccNo() + "_debit_" + loanMaster.getNumOfEmisPaid()
 						+ "  _Emi.pdf"));
 		document.open();
@@ -300,6 +305,7 @@ public class CustomerServiceImpl implements CustomerService {
 		document.add(new Paragraph("      "));
 		document.add(new Paragraph("      "));
 		document.add(new Paragraph("Transaction ID:      " + transaction.getTransactionId()));
+		document.add(new Paragraph("Transaction Account Number:      " + transaction.getAccountNumber()));
 		document.add(new Paragraph("Transaction Date:      " + transaction.getTransactionDate()));
 		document.add(new Paragraph("Transaction Amount:      " + transaction.getTransactionAmount()));
 		document.add(new Paragraph("Transaction Description:      " + transaction.getTransactionDescription()));
@@ -316,7 +322,11 @@ public class CustomerServiceImpl implements CustomerService {
 		LOGGER.info("Receipt is being generated");
 		boolean check = false;
 		Document document = new Document();
-		PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream("Receipt_"
+		File dir = new File("./CustomerCreditReceipts");
+		if (!dir.exists()) {
+			dir.mkdir();
+		}
+		PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(dir.getPath() + "/Receipt_"
 				+ loanMaster.getLoanAccountNumber() + "_credit_" + loanMaster.getNumOfEmisPaid() + "  _Emi.pdf"));
 		document.open();
 
@@ -324,6 +334,7 @@ public class CustomerServiceImpl implements CustomerService {
 		document.add(new Paragraph("      "));
 		document.add(new Paragraph("      "));
 		document.add(new Paragraph("Transaction ID:      " + transaction.getTransactionId()));
+		document.add(new Paragraph("Transaction Account Number:      " + transaction.getAccountNumber()));
 		document.add(new Paragraph("Transaction Date:      " + transaction.getTransactionDate()));
 		document.add(new Paragraph("Transaction Amount:      " + transaction.getTransactionAmount()));
 		document.add(new Paragraph("Transaction Description:      " + transaction.getTransactionDescription()));
@@ -400,6 +411,18 @@ public class CustomerServiceImpl implements CustomerService {
 		EntityTransaction txn = JpaUtil.getTransaction();
 		txn.begin();
 		transaction = transactionDao.createCreditTransaction(loanMaster, transaction);
+		txn.commit();
+		return transaction;
+	}
+
+	@Override
+	public TransactionBean createDebitTransactionForPreClosure(LoanMaster loanMaster) {
+		LOGGER.info("Transaction has been created.");
+
+		TransactionBean transaction = new TransactionBean();
+		EntityTransaction txn = JpaUtil.getTransaction();
+		txn.begin();
+		transaction = transactionDao.createDebitTransactionForPreClosure(loanMaster, transaction);
 		txn.commit();
 		return transaction;
 	}

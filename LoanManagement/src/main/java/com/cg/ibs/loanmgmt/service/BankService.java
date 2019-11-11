@@ -42,4 +42,10 @@ public interface BankService {
 	TopUp setTopUp(TopUp topUpTemp);
 
 	public LoanMaster getLoanByApplicantNum(BigInteger applicantNum);
+
+	TransactionBean createCreditTransactionForPreClosure(LoanMaster loanMasterTemp);
+
+	TransactionBean createCreditTransactionForDeclinedPreClosure(LoanMaster loanMasterTemp);
+
+	LoanMaster updatePreClosureDenial(LoanMaster loanMasterTemp);
 }

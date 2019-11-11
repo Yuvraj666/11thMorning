@@ -48,7 +48,6 @@ public class BankServiceImpl implements BankService {
 	private TransactionDao transactionDao;
 	private TopUp topUp = new TopUp();
 
-
 	private static Logger LOGGER = Logger.getLogger(BankServiceImpl.class);
 	private LoanMaster loanMaster = new LoanMaster();
 
@@ -126,45 +125,45 @@ public class BankServiceImpl implements BankService {
 	public void downloadDocument(LoanMaster loanMaster) {
 		List<DocumentBean> documents = documentDao.getDocumentByApplicantNum(loanMaster.getApplicationNumber());
 		byte[] aadhar = null;
-		byte[] loanSpecificDocument=null;
-		if(loanMaster.getTypeId().equals(1)) {
+		byte[] loanSpecificDocument = null;
+		if (loanMaster.getTypeId().equals(1)) {
 			for (DocumentBean documentBean : documents) {
-				if(!(documentBean.getAadharCard()==null)) {
-				aadhar = documentBean.getAadharCard();
-				System.out.println(documentBean.getDocumentId());
+				if (!(documentBean.getAadharCard() == null)) {
+					aadhar = documentBean.getAadharCard();
+					System.out.println(documentBean.getDocumentId());
 				}
-				if(!(documentBean.getProperty_collateral()==null)) {
+				if (!(documentBean.getProperty_collateral() == null)) {
 					loanSpecificDocument = documentBean.getProperty_collateral();
 					System.out.println(documentBean.getDocumentId());
 				}
 			}
 		}
-		if(loanMaster.getTypeId().equals(2)) {
+		if (loanMaster.getTypeId().equals(2)) {
 			for (DocumentBean documentBean : documents) {
-				if(!(documentBean.getAadharCard()==null)) {
-				aadhar = documentBean.getAadharCard();
+				if (!(documentBean.getAadharCard() == null)) {
+					aadhar = documentBean.getAadharCard();
 				}
-				if(!(documentBean.getAdmissionLetter()==null)) {
+				if (!(documentBean.getAdmissionLetter() == null)) {
 					loanSpecificDocument = documentBean.getAdmissionLetter();
 				}
 			}
 		}
-		if(loanMaster.getTypeId().equals(3)) {
+		if (loanMaster.getTypeId().equals(3)) {
 			for (DocumentBean documentBean : documents) {
-				if(!(documentBean.getAadharCard()==null)) {
-				aadhar = documentBean.getAadharCard();
+				if (!(documentBean.getAadharCard() == null)) {
+					aadhar = documentBean.getAadharCard();
 				}
-				if(!(documentBean.getPanCard()==null)) {
+				if (!(documentBean.getPanCard() == null)) {
 					loanSpecificDocument = documentBean.getPanCard();
 				}
 			}
 		}
-		if(loanMaster.getTypeId().equals(4)) {
+		if (loanMaster.getTypeId().equals(4)) {
 			for (DocumentBean documentBean : documents) {
-				if(!(documentBean.getAadharCard()==null)) {
-				aadhar = documentBean.getAadharCard();
+				if (!(documentBean.getAadharCard() == null)) {
+					aadhar = documentBean.getAadharCard();
 				}
-				if((!(documentBean.getVehicleRc()==null))) {
+				if ((!(documentBean.getVehicleRc() == null))) {
 					loanSpecificDocument = documentBean.getVehicleRc();
 				}
 			}
@@ -174,8 +173,9 @@ public class BankServiceImpl implements BankService {
 			dir.mkdir();
 		}
 		try (FileOutputStream outputStream = new FileOutputStream(
-				dir.getPath() + "/" + "Aadhar_"+ loanMaster.getApplicationNumber() + ".pdf");
-				FileOutputStream outputStream2 = new FileOutputStream(dir.getPath() + "/" + "loan_"+ loanMaster.getApplicationNumber() + ".pdf")) {
+				dir.getPath() + "/" + "Aadhar_" + loanMaster.getApplicationNumber() + ".pdf");
+				FileOutputStream outputStream2 = new FileOutputStream(
+						dir.getPath() + "/" + "loan_" + loanMaster.getApplicationNumber() + ".pdf")) {
 			outputStream.write(aadhar);
 			outputStream2.write(loanSpecificDocument);
 			outputStream.flush();
@@ -188,6 +188,7 @@ public class BankServiceImpl implements BankService {
 			System.out.println(exp1.getMessage());
 		}
 	}
+
 	@Override
 	public TopUp setTopUp(TopUp topUpTemp) {
 		EntityTransaction transaction = JpaUtil.getTransaction();
@@ -253,5 +254,34 @@ public class BankServiceImpl implements BankService {
 		transaction = transactionDao.createLoanCreditTransaction(loanMaster, transaction);
 		txn.commit();
 		return transaction;
+	}
+
+	@Override
+	public TransactionBean createCreditTransactionForPreClosure(LoanMaster loanMasterTemp) {
+		TransactionBean transaction = new TransactionBean();
+		EntityTransaction txn = JpaUtil.getTransaction();
+		txn.begin();
+		transaction = transactionDao.createCreditTransactionForPreClosure(loanMasterTemp, transaction);
+		txn.commit();
+		return transaction;
+	}
+
+	@Override
+	public TransactionBean createCreditTransactionForDeclinedPreClosure(LoanMaster loanMasterTemp) {
+		TransactionBean transaction = new TransactionBean();
+		EntityTransaction txn = JpaUtil.getTransaction();
+		txn.begin();
+		transaction = transactionDao.createCreditTransactionForDeclinedPreClosure(loanMaster, transaction);
+		txn.commit();
+		return transaction;
+	}
+
+	@Override
+	public LoanMaster updatePreClosureDenial(LoanMaster loanMasterTemp) {
+		EntityTransaction transaction = JpaUtil.getTransaction();
+		transaction.begin();
+		loanMaster = loanMasterDao.updatePreClosureDenialDao(loanMasterTemp);
+		transaction.commit();
+		return loanMaster;
 	}
 }

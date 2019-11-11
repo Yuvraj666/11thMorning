@@ -11,4 +11,11 @@ public interface TransactionDao {
 	TransactionBean createLoanDebitTransaction(LoanMaster loanMaster, TransactionBean transaction);
 
 	TransactionBean createLoanCreditTransaction(LoanMaster loanMaster, TransactionBean transaction);
+
+	TransactionBean createDebitTransactionForPreClosure(LoanMaster loanMaster, TransactionBean transaction);
+
+	TransactionBean createCreditTransactionForPreClosure(LoanMaster loanMaster, TransactionBean transaction);
+
+	TransactionBean createCreditTransactionForDeclinedPreClosure(LoanMaster loanMaster, TransactionBean transaction);
+	
 }

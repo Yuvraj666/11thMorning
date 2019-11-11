@@ -34,6 +34,8 @@ public interface LoanMasterDao {
 
 	LoanMaster getLoanByApplicantNumber(BigInteger applicantNum);
 
+	LoanMaster updatePreClosureDenialDao(LoanMaster loanMasterTemp);
+
 	// LoanMaster payEmi(CustomerBean customer, LoanMaster loanMaster);
 
 }
