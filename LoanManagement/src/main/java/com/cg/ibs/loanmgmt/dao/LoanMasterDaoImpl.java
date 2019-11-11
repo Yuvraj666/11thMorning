@@ -44,7 +44,8 @@ public class LoanMasterDaoImpl implements LoanMasterDao {
 		loanMasterTemp.setNumOfEmisPaid(0);
 		loanMasterTemp.setApprovedDate(LocalDate.now());
 		loanMasterTemp.setNextEmiDate(loanMasterTemp.getApprovedDate().plusMonths(1));
-		loanMasterTemp.getSavingsAccount().setBalance(loanMasterTemp.getLoanAmount());;
+		loanMasterTemp.getSavingsAccount().setBalance(loanMasterTemp.getLoanAmount());
+		;
 		return entityManager.merge(loanMasterTemp);
 
 	}
@@ -85,8 +86,7 @@ public class LoanMasterDaoImpl implements LoanMasterDao {
 
 	public LoanMaster updatePreClosureApprovalDao(LoanMaster loanMasterTemp) {
 		LOGGER.info("Loan details are being updated after approval of pre-closure");
-		loanMasterTemp.setStatus(LoanStatus.CLOSED);
-		loanMasterTemp.setNumOfEmisPaid(loanMasterTemp.getTotalNumOfEmis());
+		loanMasterTemp.setStatus(LoanStatus.PRE_CLOSED);
 		loanMasterTemp.setBalance(new BigDecimal("0.00"));
 		loanMasterTemp.setNextEmiDate(null);
 		return entityManager.merge(loanMasterTemp);
@@ -128,6 +128,8 @@ public class LoanMasterDaoImpl implements LoanMasterDao {
 	public void updatePreClosureDao(LoanMaster loanMaster) {
 		LOGGER.info("PreClosure is being updated in database.");
 		loanMaster.setStatus(LoanStatus.PRE_CLOSURE_VERIFICATION);
+		loanMaster.getSavingsAccount()
+				.setBalance(loanMaster.getSavingsAccount().getBalance().subtract(loanMaster.getBalance()));
 		entityManager.merge(loanMaster);
 	}
 
@@ -151,5 +153,15 @@ public class LoanMasterDaoImpl implements LoanMasterDao {
 	@Override
 	public LoanMaster getLoanByApplicantNumber(BigInteger applicantNum) {
 		return entityManager.find(LoanMaster.class, applicantNum);
+	}
+
+	@Override
+	public LoanMaster updatePreClosureDenialDao(LoanMaster loanMasterTemp) {
+		LOGGER.info("Loan details are being updated after approval of pre-closure");
+		loanMasterTemp.setStatus(LoanStatus.APPROVED);
+		loanMasterTemp.getSavingsAccount()
+				.setBalance(loanMasterTemp.getSavingsAccount().getBalance().add(loanMasterTemp.getBalance()));
+		loanMasterTemp.setNextEmiDate(null);
+		return entityManager.merge(loanMasterTemp);
 	}
 }

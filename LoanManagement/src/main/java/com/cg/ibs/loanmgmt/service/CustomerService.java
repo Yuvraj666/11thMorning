@@ -73,4 +73,6 @@ public interface CustomerService {
 	TopUp applyTopUp(CustomerBean customer, LoanMaster loanMaster, TopUp topUp) throws IOException;
 
 	boolean creditReceiptGenerator(LoanMaster loanMaster, TransactionBean transaction) throws DocumentException, FileNotFoundException;
+
+	TransactionBean createDebitTransactionForPreClosure(LoanMaster loanMaster);
 }

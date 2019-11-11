@@ -72,4 +72,41 @@ public class TransactionDaoImpl implements TransactionDao {
 		return transaction;
 	}
 
+	@Override
+	public TransactionBean createDebitTransactionForPreClosure(LoanMaster loanMaster, TransactionBean transaction) {
+		transaction.setAccountNumber(loanMaster.getSavingsAccount().getAccNo());
+		transaction.setTransactionAmount(loanMaster.getBalance());
+		transaction.setTransactionDate(LocalDateTime.now());
+		transaction.setTransactionDescription("PreClosure Payment: " + loanMaster.getLoanAccountNumber());
+		transaction.setTransactionMode(TransactionMode.ONLINE);
+		transaction.setTransactionType(TransactionType.DEBIT);
+		entityManager.persist(transaction);
+		return transaction;
+	}
+
+	@Override
+	public TransactionBean createCreditTransactionForPreClosure(LoanMaster loanMaster, TransactionBean transaction) {
+		transaction.setAccountNumber(loanMaster.getLoanAccountNumber());
+		transaction.setTransactionAmount(loanMaster.getBalance());
+		transaction.setTransactionDate(LocalDateTime.now());
+		transaction.setTransactionDescription("PreClosure Payment: " + loanMaster.getLoanAccountNumber());
+		transaction.setTransactionMode(TransactionMode.ONLINE);
+		transaction.setTransactionType(TransactionType.CREDIT);
+		entityManager.persist(transaction);
+		return transaction;
+	}
+
+	@Override
+	public TransactionBean createCreditTransactionForDeclinedPreClosure(LoanMaster loanMaster,
+			TransactionBean transaction) {
+		transaction.setAccountNumber(loanMaster.getSavingsAccount().getAccNo());
+		transaction.setTransactionAmount(loanMaster.getBalance());
+		transaction.setTransactionDate(LocalDateTime.now());
+		transaction.setTransactionDescription("PreClosure Payment: " + loanMaster.getLoanAccountNumber());
+		transaction.setTransactionMode(TransactionMode.ONLINE);
+		transaction.setTransactionType(TransactionType.CREDIT);
+		entityManager.persist(transaction);
+		return transaction;
+	}
+
 }
