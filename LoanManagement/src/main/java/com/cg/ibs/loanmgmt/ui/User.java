@@ -272,21 +272,21 @@ public class User implements ExceptionMessages {
 			if (preClosureList.isEmpty()) {
 				System.out.println("No Loan affiliated to your UserID is applicable for PreClosure!");
 			} else {
-				System.out.printf("%20s %20s %20s %20s %25s %25s %20s %20s", "APPLIED DATE", "LOAN AMOUNT", "LOAN TYPE",
-						"LOAN NUMBER", "NUMBER OF EMI's PAID", "TOTAL NUMBER OF EMI's", "LOAN STATUS", "BALANCE");
+				System.out.printf("%25s %20s %20s %20s %20s %20s %25s %25s %20s","LOAN ACCOUNT NO.", "APPLIED DATE", "LOAN AMOUNT", "LOAN TYPE", "LOAN TENURE",
+						 "NUMBER OF EMI's PAID", "TOTAL NUMBER OF EMI's", "LOAN STATUS", "BALANCE");
 				System.out.println();
 				System.out.println(
-						"------------------------------------------------------------------------------------------------------------------------------------------------------");
+						"-------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
 				for (LoanMaster loanMaster : preClosureList) {
-					System.out.format("%20tD %20f %20s %20s %25s %25s %20s %20f", loanMaster.getAppliedDate(),
+					System.out.format("%25d %20tD %20f %20s %25s %25d %25d %20s %20f", loanMaster.getLoanAccountNumber(), loanMaster.getAppliedDate(),
 							loanMaster.getLoanAmount().setScale(2),
-							customerService.getLoanTypeByTypeId(loanMaster.getTypeId()).getLoanType(),
-							loanMaster.getLoanAccountNumber(), loanMaster.getNumOfEmisPaid(),
+							customerService.getLoanTypeByTypeId(loanMaster.getTypeId()).getLoanType(),loanMaster.getLoanTenure(),
+							loanMaster.getNumOfEmisPaid(),
 							loanMaster.getTotalNumOfEmis(), loanMaster.getStatus(), loanMaster.getBalance());
 					System.out.println();
 				}
 				System.out.println(
-						"------------------------------------------------------------------------------------------------------------------------------------------------------");
+						"-------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
 				System.out.println("\n\t\t\t**********\n");
 				System.out.println("\nEnter the Loan Account Number:");
 				BigInteger loanAccNum1 = read.nextBigInteger();
@@ -332,22 +332,23 @@ public class User implements ExceptionMessages {
 		System.out.println("\t\t\t**********\n");
 		List<LoanMaster> listTemp = new ArrayList<>();
 		listTemp = customerService.getLoanListByUci(customer);
-		System.out.printf("%20s %20s %20s %20s %25s %20s %20s", "APPLIED DATE", "LOAN AMOUNT", "LOAN TYPE",
-				"LOAN NUMBER", "NUMBER OF EMI's PAID", "LOAN STATUS", "BALANCE");
+		System.out.printf("%20s %20s %20s %20s %20s %20s %20s %20s %25s %25s %20s %20s %25s", "LOAN ACCOUNT NO.", "APPLIED DATE", "APPROVED DATE", "CLOSED DATE", "LOAN AMOUNT","LOAN TENURE", "EMI AMOUNT", "LOAN TYPE",
+				 "NUMBER OF EMI's PAID","NEXT EMI DATE", "LOAN STATUS", "BALANCE", "SAVINGS ACCOUNT NO.");
 		System.out.println();
 		System.out.println(
-				"------------------------------------------------------------------------------------------------------------------------------------------------------");
+				"---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
 		for (LoanMaster loanMaster : listTemp) {
-			System.out.format("%20tD %20f %20s %20s %25s %20s %20f", loanMaster.getAppliedDate(),
-					loanMaster.getLoanAmount().setScale(2),
+			System.out.format("%20s %20tD %20tD %20s %20f %20d %20f %20s %25s %25tD %20s %20f %25d",(null == loanMaster.getLoanAccountNumber()) ? na : loanMaster.getLoanAccountNumber().toString(),loanMaster.getAppliedDate(),
+					loanMaster.getApprovedDate(),(null == loanMaster.getLoanClosededDate()) ? na : loanMaster.getLoanClosededDate().toString(),
+					loanMaster.getLoanAmount().setScale(2), loanMaster.getLoanTenure(), loanMaster.getEmiAmount(),
 					customerService.getLoanTypeByTypeId(loanMaster.getTypeId()).getLoanType(),
-					(null == loanMaster.getLoanAccountNumber()) ? na : loanMaster.getLoanAccountNumber().toString(),
+					
 					(null == loanMaster.getNumOfEmisPaid()) ? na : loanMaster.getNumOfEmisPaid().toString(),
-					loanMaster.getStatus(), loanMaster.getBalance());
+					loanMaster.getNextEmiDate(),loanMaster.getStatus(), loanMaster.getBalance(), loanMaster.getSavingsAccount().getAccNo() );
 			System.out.println();
 		}
 		System.out.println(
-				"------------------------------------------------------------------------------------------------------------------------------------------------------");
+				"-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
 		System.out.println("\n\t\t\t**********\n");
 		do {
 			if (listTemp.size() < 2) {
@@ -766,13 +767,28 @@ public class User implements ExceptionMessages {
 		} else {
 			System.out.println("Pending Loans for Verification:\n");
 			System.out.println("\n\t\t\t********\n");
-			System.out.println("Application Number\tCustomer Name\tLoan Type");
-			System.out.println("------------------------------------------------------------------------------");
+//			System.out.println("Application Number\tCustomer Name\tLoan Type");
+//			System.out.println("------------------------------------------------------------------------------");
+//			for (LoanMaster loanMaster : pendingLoans) {
+//				System.out.println(loanMaster.getApplicationNumber() + "\t\t\t"
+//						+ bankService.getCustomerDetailsByUci(loanMaster.getUci()).getFirstName() + " "
+//						+ bankService.getCustomerDetailsByUci(loanMaster.getUci()).getLastName() + "\t"
+//						+ bankService.getLoanTypeByTypeID(loanMaster.getTypeId()).getLoanType());
+			System.out.printf("%25s %20s %5s  %20s %20s %20s %20s %20s","APPLICATION NUMBER", "CUSTOMER", "NAME", "APPLIED DATE", "LOAN AMOUNT", "LOAN TYPE", "LOAN TENURE", "BALANCE");
+			System.out.println();
+			System.out.println(
+					"------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
 			for (LoanMaster loanMaster : pendingLoans) {
-				System.out.println(loanMaster.getApplicationNumber() + "\t\t\t"
-						+ bankService.getCustomerDetailsByUci(loanMaster.getUci()).getFirstName() + " "
-						+ bankService.getCustomerDetailsByUci(loanMaster.getUci()).getLastName() + "\t"
-						+ bankService.getLoanTypeByTypeID(loanMaster.getTypeId()).getLoanType());
+				System.out.format("%25d %20s %5s %20tD %20f %20s %20d  %20f",loanMaster.getApplicationNumber(), bankService.getCustomerDetailsByUci(loanMaster.getUci()).getFirstName(), 
+						bankService.getCustomerDetailsByUci(loanMaster.getUci()).getLastName(), loanMaster.getAppliedDate(),
+						loanMaster.getLoanAmount().setScale(2),
+						customerService.getLoanTypeByTypeId(loanMaster.getTypeId()).getLoanType(),loanMaster.getLoanTenure(),
+					 loanMaster.getBalance());
+				System.out.println();
+			}
+			System.out.println(
+					"------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+			System.out.println("\n\t\t\t**********\n");
 			}
 			boolean appNumCheck = true;
 			while (appNumCheck) {
@@ -852,7 +868,7 @@ public class User implements ExceptionMessages {
 				}
 			}
 		}
-	}
+	
 
 	private void verifyPreClosure() {
 		LOGGER.info("PreClosure is being verified");
@@ -861,13 +877,24 @@ public class User implements ExceptionMessages {
 		if (pendingPreClosures.isEmpty()) {
 			System.out.println("No Pending PreClosures!");
 		} else {
-			System.out.println("Pending Pre-Closure Verification: ");
+			System.out.println("Pending Pre-Closure Verification: \n ");
 			LOGGER.debug("Listing pending pre-closures.");
+			System.out.printf("%25s %25s %20s %20s %20s %20s %25s %25s %20s","APPLICATION NUMBER", "LOAN ACCOUNT NO.", "APPLIED DATE", "LOAN AMOUNT", "LOAN TYPE", "LOAN TENURE",
+					 "NUMBER OF EMI's PAID", "TOTAL NUMBER OF EMI's", "BALANCE");
+			System.out.println();
+			System.out.println(
+					"------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
 			for (LoanMaster loanMaster : pendingPreClosures) {
-
-				System.out.println(loanMaster.getApplicationNumber() + "\t"
-						+ bankService.getCustomerDetailsByUci(loanMaster.getUci()).getFirstName() + "\t"
-						+ bankService.getLoanTypeByTypeID(loanMaster.getTypeId()).getLoanType());
+				System.out.format("%25d %25d %20tD %20f %20s %20d %25d %25d %20f",loanMaster.getApplicationNumber(), loanMaster.getLoanAccountNumber(), loanMaster.getAppliedDate(),
+						loanMaster.getLoanAmount().setScale(2),
+						customerService.getLoanTypeByTypeId(loanMaster.getTypeId()).getLoanType(),loanMaster.getLoanTenure(),
+						loanMaster.getNumOfEmisPaid(),
+						loanMaster.getTotalNumOfEmis(), loanMaster.getBalance());
+				System.out.println();
+			}
+			System.out.println(
+					"------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+			System.out.println("\n\t\t\t**********\n");
 			}
 			System.out.println("Enter the applicant number of the loan for which you want to verify the Pre-Closure: ");
 			BigInteger appNumInput = read.nextBigInteger();
@@ -900,7 +927,7 @@ public class User implements ExceptionMessages {
 						+ " has been declined.");
 			}
 		}
-	}
+	
 
 	// customer Login
 	private CustomerBean customerLogin() {

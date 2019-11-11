@@ -213,6 +213,7 @@ public class CustomerServiceImpl implements CustomerService {
 		transaction.commit();
 		if (closeLoan(loanMaster)) {
 			loanMaster.setStatus(LoanStatus.CLOSED);
+			loanMaster.setLoanClosededDate(LocalDate.now());
 		}
 		if (loanMaster.getNumOfEmisPaid() == loanMaster.getTotalNumOfEmis() - 1) {
 			loanMaster.setBalance(loanMaster.getEmiAmount());
